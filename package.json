@@ -1,0 +1,13 @@
+{
+  "name": "resumepilot-ai-root",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ResumePilot AI - Full Stack Project Root",
+  "scripts": {
+    "dev:frontend": "npm --prefix frontend run dev",
+    "build:frontend": "npm --prefix frontend run build",
+    "lint:frontend": "npm --prefix frontend run lint",
+    "docker:up": "docker-compose up --build",
+    "docker:down": "docker-compose down"
+  }
+}
