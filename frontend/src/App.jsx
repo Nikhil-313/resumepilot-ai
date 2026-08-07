@@ -10,6 +10,7 @@ import UploadPage from './pages/UploadPage';
 import ResumeDetailsPage from './pages/ResumeDetailsPage';
 import InterviewDashboard from './pages/InterviewDashboard';
 import InterviewSessionPage from './pages/InterviewSessionPage';
+import InterviewReportPage from './pages/InterviewReportPage';
 
 export default function App() {
   return (
@@ -66,6 +67,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <InterviewSessionPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/interview/report/:sessionId"
+            element={
+              <ProtectedRoute>
+                <InterviewReportPage />
               </ProtectedRoute>
             }
           />

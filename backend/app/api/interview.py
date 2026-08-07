@@ -110,3 +110,33 @@ def finish_interview_session(session_id):
     except Exception as e:
         logger.exception(f"Error finishing interview session {session_id}")
         return jsonify({"error": f"Failed to finish interview: {str(e)}"}), 500
+
+@interview_bp.route('/interview/evaluate/<session_id>', methods=['POST'])
+@jwt_required()
+def evaluate_interview_session(session_id):
+    """
+    POST /api/interview/evaluate/<session_id>
+    Evaluates candidate responses using Gemini AI and returns performance report.
+    """
+    try:
+        current_user_id = get_jwt_identity()
+        data = request.get_json() or {}
+        force = data.get('force', False)
+        
+        response, status_code = InterviewService.evaluate_session(current_user_id, session_id, force=force)
+        return jsonify(response), status_code
+    except Exception as e:
+        logger.exception(f"Error evaluating interview session {session_id}")
+        return jsonify({"error": f"Failed to evaluate interview: {str(e)}"}), 500
+
+@interview_bp.route('/interview/report/<session_id>', methods=['GET'])
+@jwt_required()
+def get_interview_report(session_id):
+    """GET /api/interview/report/<session_id> - Fetch complete performance report."""
+    try:
+        current_user_id = get_jwt_identity()
+        response, status_code = InterviewService.get_report(current_user_id, session_id)
+        return jsonify(response), status_code
+    except Exception as e:
+        logger.exception(f"Error fetching report for session {session_id}")
+        return jsonify({"error": f"Failed to fetch report: {str(e)}"}), 500

@@ -13,7 +13,8 @@ import {
   Bot,
   HelpCircle,
   Save,
-  Flag
+  Flag,
+  Cpu
 } from 'lucide-react';
 
 export default function InterviewSessionPage() {
@@ -27,8 +28,8 @@ export default function InterviewSessionPage() {
   
   const [loading, setLoading] = useState(true);
   const [savingAnswer, setSavingAnswer] = useState(false);
-  const [finishing, setFinishing] = useState(false);
-  const [isCompleted, setIsCompleted] = useState(false);
+  const [evaluating, setEvaluating] = useState(false);
+  const [evalStep, setEvalStep] = useState('Analyzing answer STAR structure...');
   const [error, setError] = useState('');
 
   // Fetch session data on mount
@@ -48,8 +49,9 @@ export default function InterviewSessionPage() {
         });
         setAnswers(initialAnswers);
 
-        if (sess.status === 'completed') {
-          setIsCompleted(true);
+        // If already evaluated, jump directly to report page
+        if (sess.is_evaluated || sess.overall_score > 0) {
+          navigate(`/interview/report/${sessionId}`, { replace: true });
         }
       } catch (err) {
         setError(err.response?.data?.error || 'Failed to load interview session.');
@@ -61,7 +63,7 @@ export default function InterviewSessionPage() {
     if (sessionId) {
       fetchSession();
     }
-  }, [sessionId]);
+  }, [sessionId, navigate]);
 
   const currentQuestion = questions[currentIndex];
 
@@ -103,17 +105,29 @@ export default function InterviewSessionPage() {
 
   const handleFinish = async () => {
     await saveCurrentAnswer();
-    if (!window.confirm('Are you sure you want to finish this mock interview session?')) return;
+    if (!window.confirm('Are you sure you want to finish this interview and generate your AI evaluation report?')) return;
 
-    setFinishing(true);
+    setEvaluating(true);
     setError('');
+
     try {
-      await interviewService.finishSession(sessionId);
-      setIsCompleted(true);
+      setEvalStep('Evaluating candidate technical accuracy...');
+      await new Promise((resolve) => setTimeout(resolve, 600));
+
+      setEvalStep('Scoring communication clarity & completeness...');
+      await new Promise((resolve) => setTimeout(resolve, 600));
+
+      setEvalStep('Generating personalized AI recommendations...');
+      const evalRes = await interviewService.evaluateSession(sessionId);
+
+      if (evalRes && evalRes.report) {
+        navigate(`/interview/report/${sessionId}`);
+      } else {
+        throw new Error('Evaluation report missing.');
+      }
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to finish interview.');
-    } finally {
-      setFinishing(false);
+      setError(err.response?.data?.error || 'Failed to evaluate interview responses.');
+      setEvaluating(false);
     }
   };
 
@@ -124,6 +138,25 @@ export default function InterviewSessionPage() {
         <div className="flex-1 flex flex-col items-center justify-center">
           <Loader2 className="w-10 h-10 text-brand-cyan animate-spin mb-4" />
           <p className="text-slate-400 text-xs font-mono">Initializing AI Interview Arena...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (evaluating) {
+    return (
+      <div className="min-h-screen bg-background-dark text-slate-100 flex flex-col">
+        <Navbar />
+        <div className="flex-1 max-w-xl mx-auto w-full p-8 flex flex-col items-center justify-center text-center my-auto">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-brand-indigo to-brand-cyan flex items-center justify-center shadow-lg glow-cyan-sm mb-6 animate-pulse">
+            <Cpu className="w-8 h-8 text-white" />
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-2">Gemini AI Evaluating Responses...</h2>
+          <p className="text-xs text-brand-cyan font-mono animate-pulse mb-6">{evalStep}</p>
+          <div className="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-slate-800">
+            <div className="bg-gradient-to-r from-brand-indigo via-purple-500 to-brand-cyan h-2 rounded-full animate-pulse-slow w-full" />
+          </div>
+          <p className="text-[11px] text-slate-500 mt-4">Generating per-question scores, strengths, weaknesses & ideal responses...</p>
         </div>
       </div>
     );
@@ -192,108 +225,92 @@ export default function InterviewSessionPage() {
           </div>
         </div>
 
-        {/* Completion Banner Modal */}
-        {isCompleted ? (
-          <div className="glass-panel p-8 text-center border border-emerald-500/30 bg-emerald-500/5 mb-8">
-            <div className="w-16 h-16 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center mx-auto mb-4 text-brand-emerald">
-              <CheckCircle2 className="w-8 h-8" />
-            </div>
-            <h2 className="text-2xl font-bold text-white mb-2">Mock Interview Session Completed!</h2>
-            <p className="text-xs text-slate-300 max-w-md mx-auto mb-6">
-              Great job! All {questions.length} questions have been answered and saved to your candidate history.
-            </p>
-            <button
-              onClick={() => navigate('/interview')}
-              className="px-6 py-3 bg-gradient-to-r from-brand-indigo to-brand-cyan text-white font-bold rounded-xl text-xs shadow-lg glow-cyan-sm"
-            >
-              Start Another Mock Interview
-            </button>
-          </div>
-        ) : (
-          /* Active Question Arena */
-          <div className="space-y-6">
-            {/* Question Card */}
-            <div className="glass-panel p-6 md:p-8 border border-slate-800">
-              <div className="flex items-center justify-between mb-4">
-                <span className="px-3 py-1 rounded-md bg-slate-900 border border-slate-800 text-[11px] font-mono text-brand-cyan">
-                  {currentQuestion?.category || 'Technical Question'}
-                </span>
-                {savingAnswer && (
-                  <span className="text-[10px] text-slate-500 font-mono flex items-center space-x-1">
-                    <Save className="w-3 h-3 animate-spin" />
-                    <span>Auto-saving answer...</span>
-                  </span>
-                )}
-              </div>
-
-              <h3 className="text-lg md:text-xl font-bold text-white leading-relaxed mb-4">
-                {currentQuestion?.question_text}
-              </h3>
-
-              {/* STAR Method Hint Pill */}
-              <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-center space-x-2 text-xs text-slate-400">
-                <HelpCircle className="w-4 h-4 text-brand-indigo shrink-0" />
-                <span>
-                  <strong className="text-slate-200">STAR Method Tip:</strong> Structure response with Situation, Task, Action & Result.
-                </span>
-              </div>
-            </div>
-
-            {/* Candidate Answer Input Card */}
-            <div className="glass-panel p-6 border border-slate-800">
-              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-                Your Answer Response
-              </label>
-              <textarea
-                rows={7}
-                value={answers[currentQuestion?.id] || ''}
-                onChange={(e) => handleAnswerChange(e.target.value)}
-                placeholder="Type your structured response here..."
-                className="w-full p-4 bg-slate-950/80 border border-slate-800 rounded-xl text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-brand-indigo focus:ring-1 focus:ring-brand-indigo transition-all font-sans leading-relaxed resize-y"
-              />
-            </div>
-
-            {/* Controls Bar */}
-            <div className="flex items-center justify-between gap-4 pt-2">
-              <button
-                type="button"
-                onClick={handlePrev}
-                disabled={currentIndex === 0}
-                className="px-5 py-3 bg-slate-900 hover:bg-slate-800 text-slate-300 font-semibold rounded-xl text-xs border border-slate-800 flex items-center space-x-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Previous</span>
-              </button>
-
-              <div className="flex items-center space-x-3">
-                <button
-                  type="button"
-                  onClick={handleFinish}
-                  disabled={finishing}
-                  className="px-5 py-3 bg-slate-800 hover:bg-slate-700 text-rose-300 font-semibold rounded-xl text-xs border border-slate-700 flex items-center space-x-2 transition-all disabled:opacity-50"
-                >
-                  {finishing ? (
-                    <Loader2 className="w-4 h-4 animate-spin text-rose-400" />
-                  ) : (
-                    <Flag className="w-4 h-4 text-rose-400" />
-                  )}
-                  <span>Finish Interview</span>
-                </button>
-
-                {currentIndex < questions.length - 1 && (
-                  <button
-                    type="button"
-                    onClick={handleNext}
-                    className="px-6 py-3 bg-gradient-to-r from-brand-indigo to-brand-cyan hover:opacity-95 text-white font-bold rounded-xl text-xs shadow-lg glow-cyan-sm flex items-center space-x-2 transition-all"
-                  >
-                    <span>Next Question</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-            </div>
+        {/* Error Alert */}
+        {error && (
+          <div className="mb-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center space-x-3">
+            <AlertCircle className="w-5 h-5 text-brand-rose shrink-0" />
+            <p className="text-xs text-rose-300 font-medium">{error}</p>
           </div>
         )}
+
+        {/* Active Question Arena */}
+        <div className="space-y-6">
+          {/* Question Card */}
+          <div className="glass-panel p-6 md:p-8 border border-slate-800">
+            <div className="flex items-center justify-between mb-4">
+              <span className="px-3 py-1 rounded-md bg-slate-900 border border-slate-800 text-[11px] font-mono text-brand-cyan">
+                {currentQuestion?.category || 'Technical Question'}
+              </span>
+              {savingAnswer && (
+                <span className="text-[10px] text-slate-500 font-mono flex items-center space-x-1">
+                  <Save className="w-3 h-3 animate-spin" />
+                  <span>Auto-saving answer...</span>
+                </span>
+              )}
+            </div>
+
+            <h3 className="text-lg md:text-xl font-bold text-white leading-relaxed mb-4">
+              {currentQuestion?.question_text}
+            </h3>
+
+            {/* STAR Method Hint Pill */}
+            <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-center space-x-2 text-xs text-slate-400">
+              <HelpCircle className="w-4 h-4 text-brand-indigo shrink-0" />
+              <span>
+                <strong className="text-slate-200">STAR Method Tip:</strong> Structure response with Situation, Task, Action & Result.
+              </span>
+            </div>
+          </div>
+
+          {/* Candidate Answer Input Card */}
+          <div className="glass-panel p-6 border border-slate-800">
+            <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+              Your Answer Response
+            </label>
+            <textarea
+              rows={7}
+              value={answers[currentQuestion?.id] || ''}
+              onChange={(e) => handleAnswerChange(e.target.value)}
+              placeholder="Type your structured response here..."
+              className="w-full p-4 bg-slate-950/80 border border-slate-800 rounded-xl text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-brand-indigo focus:ring-1 focus:ring-brand-indigo transition-all font-sans leading-relaxed resize-y"
+            />
+          </div>
+
+          {/* Controls Bar */}
+          <div className="flex items-center justify-between gap-4 pt-2">
+            <button
+              type="button"
+              onClick={handlePrev}
+              disabled={currentIndex === 0}
+              className="px-5 py-3 bg-slate-900 hover:bg-slate-800 text-slate-300 font-semibold rounded-xl text-xs border border-slate-800 flex items-center space-x-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Previous</span>
+            </button>
+
+            <div className="flex items-center space-x-3">
+              <button
+                type="button"
+                onClick={handleFinish}
+                className="px-5 py-3 bg-slate-800 hover:bg-slate-700 text-rose-300 hover:text-rose-200 font-semibold rounded-xl text-xs border border-slate-700 flex items-center space-x-2 transition-all"
+              >
+                <Flag className="w-4 h-4 text-rose-400" />
+                <span>Finish & Evaluate</span>
+              </button>
+
+              {currentIndex < questions.length - 1 && (
+                <button
+                  type="button"
+                  onClick={handleNext}
+                  className="px-6 py-3 bg-gradient-to-r from-brand-indigo to-brand-cyan hover:opacity-95 text-white font-bold rounded-xl text-xs shadow-lg glow-cyan-sm flex items-center space-x-2 transition-all"
+                >
+                  <span>Next Question</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
       </main>
 
       <footer className="text-center py-6 text-xs text-slate-600 border-t border-slate-900">
