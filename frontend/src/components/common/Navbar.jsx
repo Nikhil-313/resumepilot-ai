@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Sparkles, UploadCloud, LayoutDashboard, LogOut, User as UserIcon, Bot } from 'lucide-react';
+import { Sparkles, UploadCloud, LayoutDashboard, LogOut, User as UserIcon, Bot, Target } from 'lucide-react';
 import { APP_NAME } from '../../utils/constants';
 
 export default function Navbar() {
@@ -17,6 +17,7 @@ export default function Navbar() {
   const navLinks = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'Upload Resume', path: '/upload', icon: UploadCloud },
+    { name: 'ATS Scanner', path: '/ats', icon: Target },
     { name: 'AI Interview', path: '/interview', icon: Bot },
   ];
 

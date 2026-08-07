@@ -11,6 +11,7 @@ import ResumeDetailsPage from './pages/ResumeDetailsPage';
 import InterviewDashboard from './pages/InterviewDashboard';
 import InterviewSessionPage from './pages/InterviewSessionPage';
 import InterviewReportPage from './pages/InterviewReportPage';
+import ATSAnalyzerPage from './pages/ATSAnalyzerPage';
 
 export default function App() {
   return (
@@ -75,6 +76,22 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <InterviewReportPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/ats"
+            element={
+              <ProtectedRoute>
+                <ATSAnalyzerPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/ats/report/:id"
+            element={
+              <ProtectedRoute>
+                <ATSAnalyzerPage />
               </ProtectedRoute>
             }
           />

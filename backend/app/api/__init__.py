@@ -3,6 +3,7 @@ from app.api.health import health_bp
 from app.api.auth import auth_bp
 from app.api.resumes import resumes_bp
 from app.api.interview import interview_bp
+from app.api.ats import ats_bp
 
 def register_blueprints(app):
     """Register API blueprints with Flask app instance."""
@@ -12,10 +13,12 @@ def register_blueprints(app):
     v1_blueprint.register_blueprint(auth_bp)
     v1_blueprint.register_blueprint(resumes_bp)
     v1_blueprint.register_blueprint(interview_bp)
+    v1_blueprint.register_blueprint(ats_bp)
     app.register_blueprint(v1_blueprint)
 
     # Alias /api Blueprint prefix for direct routes
     top_api_blueprint = Blueprint('api_top', __name__, url_prefix='/api')
     top_api_blueprint.register_blueprint(resumes_bp)
     top_api_blueprint.register_blueprint(interview_bp)
+    top_api_blueprint.register_blueprint(ats_bp)
     app.register_blueprint(top_api_blueprint)
