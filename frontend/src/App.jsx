@@ -9,6 +9,7 @@ import DashboardPage from './pages/DashboardPage';
 import UploadPage from './pages/UploadPage';
 import ResumeDetailsPage from './pages/ResumeDetailsPage';
 import InterviewDashboard from './pages/InterviewDashboard';
+import InterviewSessionPage from './pages/InterviewSessionPage';
 
 export default function App() {
   return (
@@ -57,6 +58,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <InterviewDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/interview/session/:sessionId"
+            element={
+              <ProtectedRoute>
+                <InterviewSessionPage />
               </ProtectedRoute>
             }
           />

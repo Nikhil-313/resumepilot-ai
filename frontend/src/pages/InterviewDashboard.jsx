@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
 import InterviewCard from '../components/interview/InterviewCard';
 import { useAuth } from '../context/AuthContext';
 import { interviewService } from '../services/interviewService';
 import { resumeService } from '../services/resumeService';
-import { Sparkles, CheckCircle2, AlertCircle, Loader2, Bot } from 'lucide-react';
+import { Sparkles, AlertCircle, Loader2, Bot } from 'lucide-react';
 
 export default function InterviewDashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const [roles, setRoles] = useState([
     'Software Engineer',
@@ -26,7 +28,6 @@ export default function InterviewDashboard() {
 
   const [loadingConfig, setLoadingConfig] = useState(true);
   const [starting, setStarting] = useState(false);
-  const [sessionResponse, setSessionResponse] = useState(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -62,21 +63,24 @@ export default function InterviewDashboard() {
   const handleStartInterview = async () => {
     setStarting(true);
     setError('');
-    setSessionResponse(null);
 
     try {
       const payload = {
         role: selectedRole,
         difficulty: selectedDifficulty,
         question_count: questionCount,
-        resume_id: selectedResumeId,
+        resume_id: selectedResumeId || null,
       };
 
       const res = await interviewService.startInterview(payload);
-      setSessionResponse(res);
+      if (res && res.session_id) {
+        // Navigate directly to live AI Interview session arena
+        navigate(`/interview/session/${res.session_id}`);
+      } else {
+        throw new Error('No session ID returned.');
+      }
     } catch (err) {
       setError(err.response?.data?.error || err.message || 'Failed to start interview session.');
-    } finally {
       setStarting(false);
     }
   };
@@ -112,19 +116,6 @@ export default function InterviewDashboard() {
           <div className="mb-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center space-x-3">
             <AlertCircle className="w-5 h-5 text-brand-rose shrink-0" />
             <p className="text-xs text-rose-300 font-medium">{error}</p>
-          </div>
-        )}
-
-        {/* Success Placeholder Response */}
-        {sessionResponse && (
-          <div className="mb-6 p-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 space-y-2">
-            <div className="flex items-center space-x-2 text-emerald-300 font-bold text-sm">
-              <CheckCircle2 className="w-5 h-5 text-brand-emerald shrink-0" />
-              <span>{sessionResponse.message || 'Interview session initialized.'}</span>
-            </div>
-            <p className="text-xs text-emerald-400/80 font-mono">
-              Status: {sessionResponse.status} • Role: {selectedRole} • Questions: {questionCount} • Difficulty: {selectedDifficulty}
-            </p>
           </div>
         )}
 

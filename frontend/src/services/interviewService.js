@@ -10,10 +10,38 @@ export const interviewService = {
   },
 
   /**
-   * Initialize a new interview session.
+   * Initialize a new interview session and generate AI questions.
    */
   async startInterview(payload) {
     const response = await api.post('/interview/start', payload);
+    return response.data;
+  },
+
+  /**
+   * Fetch details for an active/completed session.
+   */
+  async getSession(sessionId) {
+    const response = await api.get(`/interview/session/${sessionId}`);
+    return response.data;
+  },
+
+  /**
+   * Save candidate's answer for a specific question.
+   */
+  async submitAnswer(sessionId, questionId, answer) {
+    const response = await api.post('/interview/answer', {
+      session_id: sessionId,
+      question_id: questionId,
+      answer: answer,
+    });
+    return response.data;
+  },
+
+  /**
+   * Conclude an interview session.
+   */
+  async finishSession(sessionId) {
+    const response = await api.post(`/interview/finish/${sessionId}`);
     return response.data;
   },
 };
