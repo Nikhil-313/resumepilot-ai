@@ -16,10 +16,12 @@ class JobPosting(db.Model):
     description = db.Column(db.Text, nullable=False)
     required_skills = db.Column(db.JSON, nullable=False, default=list) # e.g. ['Python', 'Flask', 'PostgreSQL']
     preferred_skills = db.Column(db.JSON, nullable=True, default=list) # e.g. ['Docker', 'Kubernetes', 'Redis']
-    apply_url = db.Column(db.String(512), nullable=True, default='#')
+    apply_url = db.Column(db.String(512), nullable=True, default=None)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def to_dict(self):
+        url = self.apply_url
+        clean_url = url if (url and 'example.com' not in url.lower() and url != '#') else None
         return {
             'id': self.id,
             'title': self.title,
@@ -31,7 +33,7 @@ class JobPosting(db.Model):
             'description': self.description,
             'required_skills': self.required_skills or [],
             'preferred_skills': self.preferred_skills or [],
-            'apply_url': self.apply_url or '#',
+            'apply_url': clean_url,
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
 

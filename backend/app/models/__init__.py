@@ -5,6 +5,7 @@ from app.models.ats import ATSAnalysis
 from app.models.job import JobPosting, JobMatchReport
 from app.models.career import CareerPlan, CareerGoal, SkillRoadmap
 from app.models.optimizer import ResumeOptimization, ResumeRecommendation
+from app.models.application import JobApplication, ApplicationActivity, ApplicationFollowUp
 
 __all__ = [
     'User',
@@ -18,5 +19,8 @@ __all__ = [
     'CareerGoal',
     'SkillRoadmap',
     'ResumeOptimization',
-    'ResumeRecommendation'
+    'ResumeRecommendation',
+    'JobApplication',
+    'ApplicationActivity',
+    'ApplicationFollowUp'
 ]

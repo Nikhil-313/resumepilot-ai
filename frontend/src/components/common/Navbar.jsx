@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Sparkles, UploadCloud, LayoutDashboard, LogOut, User as UserIcon, Bot, Target, Briefcase, Compass, Wand2 } from 'lucide-react';
+import { Sparkles, UploadCloud, LayoutDashboard, LogOut, User as UserIcon, Bot, Target, Briefcase, Compass, Wand2, FolderCheck } from 'lucide-react';
 import { APP_NAME } from '../../utils/constants';
 
 export default function Navbar() {
@@ -22,6 +22,7 @@ export default function Navbar() {
     { name: 'Job Matches', path: '/jobs', icon: Briefcase },
     { name: 'Career Planner', path: '/career', icon: Compass },
     { name: 'Resume Studio', path: '/resume-optimizer', icon: Wand2 },
+    { name: 'Applications', path: '/applications', icon: FolderCheck },
   ];
 
   return (
@@ -36,7 +37,7 @@ export default function Navbar() {
         </Link>
 
         {/* Center Nav Links */}
-        <nav className="hidden md:flex items-center space-x-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800">
+        <nav className="hidden lg:flex items-center space-x-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800">
           {navLinks.map((link) => {
             const Icon = link.icon;
             const isActive = location.pathname === link.path || (link.path !== '/dashboard' && location.pathname.startsWith(link.path));
@@ -44,13 +45,13 @@ export default function Navbar() {
               <Link
                 key={link.path}
                 to={link.path}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                className={`flex items-center space-x-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
                   isActive
                     ? 'bg-brand-indigo text-white shadow-md'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
                 }`}
               >
-                <Icon className="w-4 h-4" />
+                <Icon className="w-3.5 h-3.5" />
                 <span>{link.name}</span>
               </Link>
             );

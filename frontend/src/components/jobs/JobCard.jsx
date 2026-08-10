@@ -1,14 +1,37 @@
-import React from 'react';
-import { Building2, MapPin, Briefcase, DollarSign, CheckCircle2, AlertTriangle, ExternalLink, Sparkles, Eye } from 'lucide-react';
+import React, { useState } from 'react';
+import { Building2, MapPin, Briefcase, DollarSign, CheckCircle2, AlertTriangle, ExternalLink, Sparkles, Eye, BookmarkPlus, Check, Loader2 } from 'lucide-react';
+import { applicationService } from '../../services/applicationService';
+import { isValidApplyUrl } from '../../utils/urlUtils';
 
 export default function JobCard({ job, onViewReport, onApply }) {
   const matchScore = job.match_percentage || 0;
+  const [tracking, setTracking] = useState(false);
+  const [tracked, setTracked] = useState(false);
+  const [trackMsg, setTrackMsg] = useState('');
+
+  const canApply = isValidApplyUrl(job.apply_url);
 
   const getMatchBadgeStyle = (score) => {
     if (score >= 80) return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30 glow-emerald-sm';
     if (score >= 60) return 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30';
     if (score > 0) return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
     return 'bg-slate-900 text-slate-400 border-slate-800';
+  };
+
+  const handleTrackApplication = async (e) => {
+    e.stopPropagation();
+    setTracking(true);
+    setTrackMsg('');
+
+    try {
+      const res = await applicationService.createFromJob(job.id);
+      setTracked(true);
+      setTrackMsg(res.already_exists ? 'Already in Tracker ✓' : 'Application added to tracker ✓');
+    } catch (err) {
+      alert(err.response?.data?.error || 'Failed to track application.');
+    } finally {
+      setTracking(false);
+    }
   };
 
   return (
@@ -101,13 +124,40 @@ export default function JobCard({ job, onViewReport, onApply }) {
         </div>
       </div>
 
+      {/* Tracked Toast Notification */}
+      {trackMsg && (
+        <div className="mb-3 p-2 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-300 text-[11px] text-center font-mono font-semibold">
+          {trackMsg}
+        </div>
+      )}
+
       {/* Card Actions Footer */}
-      <div className="pt-4 border-t border-slate-800/80 flex items-center gap-2">
+      <div className="pt-4 border-t border-slate-800/80 flex flex-col sm:flex-row items-center gap-2">
+        <button
+          type="button"
+          onClick={handleTrackApplication}
+          disabled={tracking || tracked}
+          className={`w-full sm:w-auto px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-center space-x-1.5 transition-all cursor-pointer ${
+            tracked
+              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 cursor-default'
+              : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800'
+          }`}
+        >
+          {tracking ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-cyan" />
+          ) : tracked ? (
+            <Check className="w-3.5 h-3.5 text-emerald-400" />
+          ) : (
+            <BookmarkPlus className="w-3.5 h-3.5 text-brand-indigo" />
+          )}
+          <span>{tracked ? 'Tracked ✓' : 'Track Application'}</span>
+        </button>
+
         {job.match_report_id ? (
           <button
             type="button"
             onClick={() => onViewReport && onViewReport(job.match_report_id, job)}
-            className="flex-1 py-2 px-3 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 flex items-center justify-center space-x-1.5 transition-all"
+            className="flex-1 w-full py-2 px-3 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 flex items-center justify-center space-x-1.5 transition-all cursor-pointer"
           >
             <Eye className="w-3.5 h-3.5 text-brand-cyan" />
             <span>Match Report</span>
@@ -116,28 +166,33 @@ export default function JobCard({ job, onViewReport, onApply }) {
           <button
             type="button"
             onClick={() => onViewReport && onViewReport(null, job)}
-            className="flex-1 py-2 px-3 bg-brand-indigo/20 hover:bg-brand-indigo/30 text-brand-cyan text-xs font-semibold rounded-xl border border-brand-indigo/30 flex items-center justify-center space-x-1.5 transition-all"
+            className="flex-1 w-full py-2 px-3 bg-brand-indigo/20 hover:bg-brand-indigo/30 text-brand-cyan text-xs font-semibold rounded-xl border border-brand-indigo/30 flex items-center justify-center space-x-1.5 transition-all cursor-pointer"
           >
             <Sparkles className="w-3.5 h-3.5" />
-            <span>AI Match Scan</span>
+            <span>Match Scan</span>
           </button>
         )}
 
-        <a
-          href={job.apply_url || '#'}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={(e) => {
-            if (!job.apply_url || job.apply_url === '#') {
-              e.preventDefault();
-              if (onApply) onApply(job);
-            }
-          }}
-          className="py-2 px-4 bg-gradient-to-r from-brand-indigo to-brand-cyan hover:opacity-95 text-white text-xs font-bold rounded-xl shadow-md glow-cyan-sm flex items-center space-x-1.5 transition-all"
-        >
-          <span>Apply</span>
-          <ExternalLink className="w-3.5 h-3.5" />
-        </a>
+        {canApply ? (
+          <a
+            href={job.apply_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="py-2 px-3 bg-gradient-to-r from-brand-indigo to-brand-cyan hover:opacity-95 text-white text-xs font-bold rounded-xl shadow-md glow-cyan-sm flex items-center justify-center space-x-1 transition-all"
+          >
+            <span>Apply</span>
+            <ExternalLink className="w-3.5 h-3.5" />
+          </a>
+        ) : (
+          <button
+            type="button"
+            disabled
+            title="Application link unavailable for this demo job"
+            className="py-2 px-3 bg-slate-900/90 border border-slate-800 text-slate-500 text-xs font-semibold rounded-xl flex items-center justify-center space-x-1 cursor-not-allowed opacity-75 shrink-0"
+          >
+            <span>Apply Link Unavailable</span>
+          </button>
+        )}
       </div>
     </div>
   );

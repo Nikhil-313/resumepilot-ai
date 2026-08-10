@@ -4,6 +4,7 @@ import Navbar from '../components/common/Navbar';
 import JobCard from '../components/jobs/JobCard';
 import JobFilters from '../components/jobs/JobFilters';
 import { jobService } from '../services/jobService';
+import { isValidApplyUrl } from '../utils/urlUtils';
 import {
   Sparkles,
   Briefcase,
@@ -52,7 +53,7 @@ export default function JobMatchesPage() {
       setJobs(data.jobs || []);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to fetch job opportunities.');
-    } finally {
+    } fontally {
       setLoadingJobs(false);
     }
   };
@@ -107,7 +108,6 @@ export default function JobMatchesPage() {
     if (reportId) {
       navigate(`/jobs/match/${reportId}`);
     } else {
-      // Trigger AI scan if not yet matched
       handleGenerateMatches();
     }
   };
@@ -238,7 +238,13 @@ export default function JobMatchesPage() {
                   key={job.id}
                   job={job}
                   onViewReport={handleViewReport}
-                  onApply={(j) => window.open(j.apply_url || '#', '_blank')}
+                  onApply={(j) => {
+                    if (isValidApplyUrl(j.apply_url)) {
+                      window.open(j.apply_url, '_blank');
+                    } else {
+                      alert('Application link unavailable for this demo job.');
+                    }
+                  }}
                 />
               ))}
             </div>

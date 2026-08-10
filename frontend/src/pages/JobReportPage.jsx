@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
 import { jobService } from '../services/jobService';
+import { isValidApplyUrl } from '../utils/urlUtils';
 import {
   Sparkles,
   Award,
@@ -83,6 +84,7 @@ export default function JobReportPage() {
 
   const job = report.job || {};
   const matchPercentage = report.match_percentage || 0;
+  const canApply = isValidApplyUrl(job.apply_url);
 
   const getMatchBadgeStyle = (score) => {
     if (score >= 80) return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
@@ -114,7 +116,7 @@ export default function JobReportPage() {
               <span>Download PDF</span>
             </button>
 
-            {job.apply_url && (
+            {canApply ? (
               <a
                 href={job.apply_url}
                 target="_blank"
@@ -124,6 +126,15 @@ export default function JobReportPage() {
                 <span>Apply for Position</span>
                 <ExternalLink className="w-4 h-4" />
               </a>
+            ) : (
+              <button
+                type="button"
+                disabled
+                title="Application link unavailable for this demo job"
+                className="px-4 py-2 bg-slate-900 border border-slate-800 text-slate-500 font-semibold rounded-xl text-xs flex items-center space-x-1.5 cursor-not-allowed opacity-75"
+              >
+                <span>Apply Link Unavailable</span>
+              </button>
             )}
           </div>
         </div>

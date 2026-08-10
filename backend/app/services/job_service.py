@@ -23,7 +23,7 @@ SAMPLE_JOB_POSTINGS = [
         "description": "We are seeking a versatile Software Engineer to design, develop, and maintain high-performance web applications and backend services. You will collaborate with cross-functional teams to deliver scalable microservices and clean API architectures.",
         "required_skills": ["Python", "Flask", "PostgreSQL", "REST APIs", "Git", "Docker"],
         "preferred_skills": ["Redis", "Kubernetes", "AWS", "CI/CD"],
-        "apply_url": "https://example.com/jobs/nexus-software-engineer"
+        "apply_url": None
     },
     {
         "title": "Frontend Developer",
@@ -35,7 +35,7 @@ SAMPLE_JOB_POSTINGS = [
         "description": "Build stunning, responsive, and high-performance user interfaces using React, TypeScript, and modern CSS frameworks. You will partner with product design teams to create glassmorphic dashboards and real-time interactive user experiences.",
         "required_skills": ["React", "JavaScript", "TypeScript", "Tailwind CSS", "HTML5/CSS3", "REST APIs"],
         "preferred_skills": ["Next.js", "Redux", "Zustand", "Webpack/Vite", "Figma"],
-        "apply_url": "https://example.com/jobs/vivid-frontend-developer"
+        "apply_url": None
     },
     {
         "title": "Backend Developer",
@@ -47,7 +47,7 @@ SAMPLE_JOB_POSTINGS = [
         "description": "Architect and scale mission-critical backend microservices, relational database schemas, and distributed caching pipelines. You will lead database query optimization and enforce high-throughput API security.",
         "required_skills": ["Python", "Flask", "SQLAlchemy", "PostgreSQL", "REST APIs", "Docker"],
         "preferred_skills": ["Redis", "RabbitMQ", "gRPC", "Kubernetes", "AWS"],
-        "apply_url": "https://example.com/jobs/apex-backend-developer"
+        "apply_url": None
     },
     {
         "title": "Full Stack Engineer",
@@ -59,7 +59,7 @@ SAMPLE_JOB_POSTINGS = [
         "description": "Drive end-to-end feature delivery across our React SPA frontend and Python Flask microservice backend. You will build user-facing AI features, manage database ORM models, and optimize CI/CD deployment pipelines.",
         "required_skills": ["React", "Python", "Flask", "PostgreSQL", "JavaScript", "REST APIs"],
         "preferred_skills": ["Docker", "Tailwind CSS", "TypeScript", "Redis", "Vercel/Render"],
-        "apply_url": "https://example.com/jobs/nova-fullstack-engineer"
+        "apply_url": None
     },
     {
         "title": "Data Scientist",
@@ -71,7 +71,7 @@ SAMPLE_JOB_POSTINGS = [
         "description": "Extract actionable business insights and train predictive machine learning models using Python, Pandas, Scikit-Learn, and SQL. You will build end-to-end data pipelines, run statistical hypothesis tests, and communicate findings to leadership.",
         "required_skills": ["Python", "SQL", "Pandas", "NumPy", "Scikit-Learn", "Data Visualization"],
         "preferred_skills": ["PyTorch", "TensorFlow", "PostgreSQL", "A/B Testing", "Spark"],
-        "apply_url": "https://example.com/jobs/insight-data-scientist"
+        "apply_url": None
     },
     {
         "title": "Machine Learning Engineer",
@@ -83,7 +83,7 @@ SAMPLE_JOB_POSTINGS = [
         "description": "Train, fine-tune, and deploy state-of-the-art Deep Learning and Generative AI models into production inference pipelines. You will optimize LLM response latency, build vector search indexes, and engineer automated MLOps pipelines.",
         "required_skills": ["Python", "PyTorch", "Transformers", "LLMs", "Vector DBs", "Docker"],
         "preferred_skills": ["TensorRT", "ONNX", "FastAPI", "Kubernetes", "MLflow"],
-        "apply_url": "https://example.com/jobs/cortex-ml-engineer"
+        "apply_url": None
     },
     {
         "title": "DevOps Engineer",
@@ -95,7 +95,7 @@ SAMPLE_JOB_POSTINGS = [
         "description": "Automate cloud infrastructure provisioning, container orchestration, and CI/CD deployment workflows. You will manage Kubernetes clusters, enforce zero-downtime blue-green deployments, and configure Prometheus monitoring.",
         "required_skills": ["Docker", "Kubernetes", "AWS", "Terraform", "CI/CD", "Linux/Bash"],
         "preferred_skills": ["Python", "Prometheus/Grafana", "Helm", "Ansible"],
-        "apply_url": "https://example.com/jobs/stratus-devops-engineer"
+        "apply_url": None
     },
     {
         "title": "Product Manager",
@@ -107,7 +107,7 @@ SAMPLE_JOB_POSTINGS = [
         "description": "Lead product roadmap vision, user research, feature prioritization, and sprint execution for our SaaS platform. You will work closely with engineering leads and UX designers to launch high-impact product experiences.",
         "required_skills": ["Product Strategy", "User Research", "Agile/Scrum", "Data Analytics", "Roadmap Planning", "Wireframing"],
         "preferred_skills": ["SQL", "A/B Testing", "Mixpanel", "Jira", "Technical Background"],
-        "apply_url": "https://example.com/jobs/elevate-product-manager"
+        "apply_url": None
     }
 ]
 
@@ -117,10 +117,20 @@ class JobService:
 
     @classmethod
     def seed_jobs_if_empty(cls):
-        """Seed sample job postings if database is empty."""
+        """Seed sample job postings if database is empty or sanitize placeholder URLs."""
         try:
-            count = JobPosting.query.count()
-            if count == 0:
+            # Sanitize existing db rows containing placeholder URLs (e.g. example.com)
+            existing_jobs = JobPosting.query.all()
+            if len(existing_jobs) > 0:
+                dirty = False
+                for job in existing_jobs:
+                    if job.apply_url and ('example.com' in job.apply_url.lower() or job.apply_url == '#'):
+                        job.apply_url = None
+                        dirty = True
+                if dirty:
+                    db.session.commit()
+                    logger.info("Sanitized placeholder URLs in existing job postings.")
+            else:
                 logger.info("Seeding database with sample job postings...")
                 for job_data in SAMPLE_JOB_POSTINGS:
                     jp = JobPosting(
@@ -140,7 +150,7 @@ class JobService:
                 logger.info(f"Successfully seeded {len(SAMPLE_JOB_POSTINGS)} job postings.")
         except Exception as e:
             db.session.rollback()
-            logger.exception(f"Failed to seed job postings: {e}")
+            logger.exception(f"Failed to seed/sanitize job postings: {e}")
 
     @classmethod
     def get_available_jobs(
@@ -150,10 +160,10 @@ class JobService:
         location_filter: str = None,
         exp_filter: str = None,
         min_match: int = 0,
-        sort_by: str = 'match_score' # 'match_score', 'company', 'role'
+        sort_by: str = 'match_score'
     ) -> Tuple[List[Dict[str, Any]], int]:
         """Fetch available job postings with optional filters, sorting, and candidate match data."""
-        # Ensure database has job postings
+        # Ensure database has job postings & clean URLs
         cls.seed_jobs_if_empty()
 
         query = JobPosting.query
@@ -184,7 +194,6 @@ class JobService:
                 job_dict['matching_skills'] = mr.matching_skills or []
                 job_dict['missing_skills'] = mr.missing_skills or []
             else:
-                # Basic skill overlap estimate if no AI report generated yet
                 job_dict['match_percentage'] = 0
                 job_dict['match_report_id'] = None
                 job_dict['matching_skills'] = []
@@ -215,10 +224,8 @@ class JobService:
         if not user:
             return {'error': 'User not found.'}, 404
 
-        # 1. Fetch candidate profile details
         candidate_profile = user.to_dict()
 
-        # 2. Fetch latest parsed resume
         resume = None
         if resume_id:
             resume = Resume.query.filter_by(id=resume_id, user_id=user_id).first()
@@ -227,10 +234,7 @@ class JobService:
 
         resume_data = resume.parsed_json if (resume and resume.parsed_json) else (resume.filename if resume else "")
 
-        # 3. Fetch candidate's latest ATS and Interview context if available
         ats_latest = ATSAnalysis.query.filter_by(user_id=user_id).order_by(desc(ATSAnalysis.created_at)).first()
-        interview_latest = InterviewSession.query.filter_by(user_id=user_id, status='completed').order_by(desc(InterviewSession.created_at)).first()
-
         if ats_latest and ats_latest.matching_skills:
             candidate_profile['primary_skills'] = list(set(
                 (candidate_profile.get('primary_skills') or []) + (ats_latest.matching_skills or [])
@@ -242,11 +246,8 @@ class JobService:
         try:
             for job in jobs:
                 job_dict = job.to_dict()
-                
-                # Check existing report to update or create
                 existing_report = JobMatchReport.query.filter_by(user_id=user_id, job_id=job.id).first()
 
-                # Run Gemini AI Job Matcher (or fallback)
                 match_result = analyze_job_match_with_gemini(
                     job_posting=job_dict,
                     candidate_profile=candidate_profile,

@@ -16,6 +16,8 @@ import JobMatchesPage from './pages/JobMatchesPage';
 import JobReportPage from './pages/JobReportPage';
 import CareerPlannerPage from './pages/CareerPlannerPage';
 import ResumeOptimizerPage from './pages/ResumeOptimizerPage';
+import ApplicationTrackerPage from './pages/ApplicationTrackerPage';
+import ApplicationDetailPage from './pages/ApplicationDetailPage';
 
 export default function App() {
   return (
@@ -128,6 +130,22 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <ResumeOptimizerPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/applications"
+            element={
+              <ProtectedRoute>
+                <ApplicationTrackerPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/applications/:id"
+            element={
+              <ProtectedRoute>
+                <ApplicationDetailPage />
               </ProtectedRoute>
             }
           />
