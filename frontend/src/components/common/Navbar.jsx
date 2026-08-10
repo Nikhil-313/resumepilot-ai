@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { commandCenterService } from '../../services/commandCenterService';
-import { Sparkles, UploadCloud, LayoutDashboard, LogOut, User as UserIcon, Bot, Target, Briefcase, Compass, Wand2, FolderCheck, Cpu, Bell, Brain } from 'lucide-react';
+import { Sparkles, UploadCloud, LayoutDashboard, LogOut, User as UserIcon, Bot, Target, Briefcase, Compass, Wand2, FolderCheck, Cpu, Bell, Brain, TrendingUp } from 'lucide-react';
 import { APP_NAME } from '../../utils/constants';
 
 export default function Navbar() {
@@ -34,6 +34,7 @@ export default function Navbar() {
 
   const navLinks = [
     { name: 'Command Center', path: '/command-center', icon: Cpu },
+    { name: 'Progress', path: '/progress', icon: TrendingUp },
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'Upload', path: '/upload', icon: UploadCloud },
     { name: 'ATS Scanner', path: '/ats', icon: Target },
@@ -57,7 +58,7 @@ export default function Navbar() {
         </Link>
 
         {/* Center Nav Links */}
-        <nav className="hidden xl:flex items-center space-x-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800">
+        <nav className="hidden xl:flex items-center space-x-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800 overflow-x-auto max-w-[70vw]">
           {navLinks.map((link) => {
             const Icon = link.icon;
             const isActive = location.pathname === link.path || (link.path !== '/dashboard' && link.path !== '/command-center' && location.pathname.startsWith(link.path));
@@ -65,7 +66,7 @@ export default function Navbar() {
               <Link
                 key={link.path}
                 to={link.path}
-                className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold shrink-0 transition-all ${
                   isActive
                     ? 'bg-brand-indigo text-white shadow-md'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'

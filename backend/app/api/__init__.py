@@ -10,6 +10,7 @@ from app.api.optimizer import optimizer_bp
 from app.api.applications import applications_bp
 from app.api.command_center import command_center_bp
 from app.api.interview_intelligence import interview_intelligence_bp
+from app.api.progress import progress_bp
 
 def register_blueprints(app):
     """Register API blueprints with Flask app instance."""
@@ -26,6 +27,7 @@ def register_blueprints(app):
     v1_blueprint.register_blueprint(applications_bp)
     v1_blueprint.register_blueprint(command_center_bp)
     v1_blueprint.register_blueprint(interview_intelligence_bp)
+    v1_blueprint.register_blueprint(progress_bp)
     app.register_blueprint(v1_blueprint)
 
     # Alias /api Blueprint prefix for direct routes
@@ -39,4 +41,5 @@ def register_blueprints(app):
     top_api_blueprint.register_blueprint(applications_bp)
     top_api_blueprint.register_blueprint(command_center_bp)
     top_api_blueprint.register_blueprint(interview_intelligence_bp)
+    top_api_blueprint.register_blueprint(progress_bp)
     app.register_blueprint(top_api_blueprint)

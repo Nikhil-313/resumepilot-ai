@@ -20,6 +20,7 @@ import ApplicationTrackerPage from './pages/ApplicationTrackerPage';
 import ApplicationDetailPage from './pages/ApplicationDetailPage';
 import CommandCenterPage from './pages/CommandCenterPage';
 import InterviewIntelligencePage from './pages/InterviewIntelligencePage';
+import ProgressPage from './pages/ProgressPage';
 
 export default function App() {
   return (
@@ -36,6 +37,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <CommandCenterPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/progress"
+            element={
+              <ProtectedRoute>
+                <ProgressPage />
               </ProtectedRoute>
             }
           />
