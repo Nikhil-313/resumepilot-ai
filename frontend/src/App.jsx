@@ -15,6 +15,7 @@ import ATSAnalyzerPage from './pages/ATSAnalyzerPage';
 import JobMatchesPage from './pages/JobMatchesPage';
 import JobReportPage from './pages/JobReportPage';
 import CareerPlannerPage from './pages/CareerPlannerPage';
+import ResumeOptimizerPage from './pages/ResumeOptimizerPage';
 
 export default function App() {
   return (
@@ -119,6 +120,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <CareerPlannerPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/resume-optimizer"
+            element={
+              <ProtectedRoute>
+                <ResumeOptimizerPage />
               </ProtectedRoute>
             }
           />

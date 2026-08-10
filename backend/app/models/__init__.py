@@ -4,6 +4,7 @@ from app.models.interview import InterviewSession, InterviewQuestion
 from app.models.ats import ATSAnalysis
 from app.models.job import JobPosting, JobMatchReport
 from app.models.career import CareerPlan, CareerGoal, SkillRoadmap
+from app.models.optimizer import ResumeOptimization, ResumeRecommendation
 
 __all__ = [
     'User',
@@ -15,5 +16,7 @@ __all__ = [
     'JobMatchReport',
     'CareerPlan',
     'CareerGoal',
-    'SkillRoadmap'
+    'SkillRoadmap',
+    'ResumeOptimization',
+    'ResumeRecommendation'
 ]

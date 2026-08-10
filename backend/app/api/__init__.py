@@ -6,6 +6,7 @@ from app.api.interview import interview_bp
 from app.api.ats import ats_bp
 from app.api.jobs import jobs_bp
 from app.api.career import career_bp
+from app.api.optimizer import optimizer_bp
 
 def register_blueprints(app):
     """Register API blueprints with Flask app instance."""
@@ -18,6 +19,7 @@ def register_blueprints(app):
     v1_blueprint.register_blueprint(ats_bp)
     v1_blueprint.register_blueprint(jobs_bp)
     v1_blueprint.register_blueprint(career_bp)
+    v1_blueprint.register_blueprint(optimizer_bp)
     app.register_blueprint(v1_blueprint)
 
     # Alias /api Blueprint prefix for direct routes
@@ -27,4 +29,5 @@ def register_blueprints(app):
     top_api_blueprint.register_blueprint(ats_bp)
     top_api_blueprint.register_blueprint(jobs_bp)
     top_api_blueprint.register_blueprint(career_bp)
+    top_api_blueprint.register_blueprint(optimizer_bp)
     app.register_blueprint(top_api_blueprint)

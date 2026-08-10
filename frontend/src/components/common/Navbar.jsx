@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Sparkles, UploadCloud, LayoutDashboard, LogOut, User as UserIcon, Bot, Target, Briefcase, Compass } from 'lucide-react';
+import { Sparkles, UploadCloud, LayoutDashboard, LogOut, User as UserIcon, Bot, Target, Briefcase, Compass, Wand2 } from 'lucide-react';
 import { APP_NAME } from '../../utils/constants';
 
 export default function Navbar() {
@@ -21,6 +21,7 @@ export default function Navbar() {
     { name: 'AI Interview', path: '/interview', icon: Bot },
     { name: 'Job Matches', path: '/jobs', icon: Briefcase },
     { name: 'Career Planner', path: '/career', icon: Compass },
+    { name: 'Resume Studio', path: '/resume-optimizer', icon: Wand2 },
   ];
 
   return (
