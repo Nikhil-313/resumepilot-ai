@@ -7,6 +7,7 @@ from app.models.career import CareerPlan, CareerGoal, SkillRoadmap
 from app.models.optimizer import ResumeOptimization, ResumeRecommendation
 from app.models.application import JobApplication, ApplicationActivity, ApplicationFollowUp
 from app.models.notification import CareerNotification
+from app.models.interview_intelligence import InterviewPracticeRecommendation
 
 __all__ = [
     'User',
@@ -24,5 +25,6 @@ __all__ = [
     'JobApplication',
     'ApplicationActivity',
     'ApplicationFollowUp',
-    'CareerNotification'
+    'CareerNotification',
+    'InterviewPracticeRecommendation'
 ]

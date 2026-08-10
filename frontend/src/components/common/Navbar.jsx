@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { commandCenterService } from '../../services/commandCenterService';
-import { Sparkles, UploadCloud, LayoutDashboard, LogOut, User as UserIcon, Bot, Target, Briefcase, Compass, Wand2, FolderCheck, Cpu, Bell } from 'lucide-react';
+import { Sparkles, UploadCloud, LayoutDashboard, LogOut, User as UserIcon, Bot, Target, Briefcase, Compass, Wand2, FolderCheck, Cpu, Bell, Brain } from 'lucide-react';
 import { APP_NAME } from '../../utils/constants';
 
 export default function Navbar() {
@@ -38,6 +38,7 @@ export default function Navbar() {
     { name: 'Upload', path: '/upload', icon: UploadCloud },
     { name: 'ATS Scanner', path: '/ats', icon: Target },
     { name: 'AI Interview', path: '/interview', icon: Bot },
+    { name: 'Interview Intelligence', path: '/interview-intelligence', icon: Brain },
     { name: 'Job Matches', path: '/jobs', icon: Briefcase },
     { name: 'Career Planner', path: '/career', icon: Compass },
     { name: 'Resume Studio', path: '/resume-optimizer', icon: Wand2 },
@@ -56,7 +57,7 @@ export default function Navbar() {
         </Link>
 
         {/* Center Nav Links */}
-        <nav className="hidden lg:flex items-center space-x-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800">
+        <nav className="hidden xl:flex items-center space-x-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800">
           {navLinks.map((link) => {
             const Icon = link.icon;
             const isActive = location.pathname === link.path || (link.path !== '/dashboard' && link.path !== '/command-center' && location.pathname.startsWith(link.path));

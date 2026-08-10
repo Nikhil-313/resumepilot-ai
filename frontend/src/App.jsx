@@ -19,6 +19,7 @@ import ResumeOptimizerPage from './pages/ResumeOptimizerPage';
 import ApplicationTrackerPage from './pages/ApplicationTrackerPage';
 import ApplicationDetailPage from './pages/ApplicationDetailPage';
 import CommandCenterPage from './pages/CommandCenterPage';
+import InterviewIntelligencePage from './pages/InterviewIntelligencePage';
 
 export default function App() {
   return (
@@ -91,6 +92,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <InterviewReportPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/interview-intelligence"
+            element={
+              <ProtectedRoute>
+                <InterviewIntelligencePage />
               </ProtectedRoute>
             }
           />
