@@ -6,6 +6,7 @@ from app.models.job import JobPosting, JobMatchReport
 from app.models.career import CareerPlan, CareerGoal, SkillRoadmap
 from app.models.optimizer import ResumeOptimization, ResumeRecommendation
 from app.models.application import JobApplication, ApplicationActivity, ApplicationFollowUp
+from app.models.notification import CareerNotification
 
 __all__ = [
     'User',
@@ -22,5 +23,6 @@ __all__ = [
     'ResumeRecommendation',
     'JobApplication',
     'ApplicationActivity',
-    'ApplicationFollowUp'
+    'ApplicationFollowUp',
+    'CareerNotification'
 ]

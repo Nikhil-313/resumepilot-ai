@@ -53,7 +53,7 @@ export default function JobMatchesPage() {
       setJobs(data.jobs || []);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to fetch job opportunities.');
-    } fontally {
+    } finally {
       setLoadingJobs(false);
     }
   };

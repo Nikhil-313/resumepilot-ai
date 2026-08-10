@@ -18,6 +18,7 @@ import CareerPlannerPage from './pages/CareerPlannerPage';
 import ResumeOptimizerPage from './pages/ResumeOptimizerPage';
 import ApplicationTrackerPage from './pages/ApplicationTrackerPage';
 import ApplicationDetailPage from './pages/ApplicationDetailPage';
+import CommandCenterPage from './pages/CommandCenterPage';
 
 export default function App() {
   return (
@@ -29,6 +30,14 @@ export default function App() {
           <Route path="/register" element={<RegisterPage />} />
 
           {/* Protected Candidate Routes */}
+          <Route
+            path="/command-center"
+            element={
+              <ProtectedRoute>
+                <CommandCenterPage />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/onboarding"
             element={
@@ -151,7 +160,7 @@ export default function App() {
           />
 
           {/* Default Route Redirect */}
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/command-center" replace />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>
