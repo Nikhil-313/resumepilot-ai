@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Sparkles, UploadCloud, LayoutDashboard, LogOut, User as UserIcon, Bot, Target } from 'lucide-react';
+import { Sparkles, UploadCloud, LayoutDashboard, LogOut, User as UserIcon, Bot, Target, Briefcase, Compass } from 'lucide-react';
 import { APP_NAME } from '../../utils/constants';
 
 export default function Navbar() {
@@ -19,6 +19,8 @@ export default function Navbar() {
     { name: 'Upload Resume', path: '/upload', icon: UploadCloud },
     { name: 'ATS Scanner', path: '/ats', icon: Target },
     { name: 'AI Interview', path: '/interview', icon: Bot },
+    { name: 'Job Matches', path: '/jobs', icon: Briefcase },
+    { name: 'Career Planner', path: '/career', icon: Compass },
   ];
 
   return (
@@ -36,12 +38,12 @@ export default function Navbar() {
         <nav className="hidden md:flex items-center space-x-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800">
           {navLinks.map((link) => {
             const Icon = link.icon;
-            const isActive = location.pathname === link.path;
+            const isActive = location.pathname === link.path || (link.path !== '/dashboard' && location.pathname.startsWith(link.path));
             return (
               <Link
                 key={link.path}
                 to={link.path}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+                className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
                   isActive
                     ? 'bg-brand-indigo text-white shadow-md'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
@@ -65,7 +67,7 @@ export default function Navbar() {
 
           <button
             onClick={handleLogout}
-            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-xs text-slate-300 transition-all"
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-xs text-slate-300 transition-all cursor-pointer"
             title="Sign Out"
           >
             <LogOut className="w-3.5 h-3.5 text-rose-400" />

@@ -12,6 +12,9 @@ import InterviewDashboard from './pages/InterviewDashboard';
 import InterviewSessionPage from './pages/InterviewSessionPage';
 import InterviewReportPage from './pages/InterviewReportPage';
 import ATSAnalyzerPage from './pages/ATSAnalyzerPage';
+import JobMatchesPage from './pages/JobMatchesPage';
+import JobReportPage from './pages/JobReportPage';
+import CareerPlannerPage from './pages/CareerPlannerPage';
 
 export default function App() {
   return (
@@ -92,6 +95,30 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <ATSAnalyzerPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/jobs"
+            element={
+              <ProtectedRoute>
+                <JobMatchesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/jobs/match/:id"
+            element={
+              <ProtectedRoute>
+                <JobReportPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/career"
+            element={
+              <ProtectedRoute>
+                <CareerPlannerPage />
               </ProtectedRoute>
             }
           />

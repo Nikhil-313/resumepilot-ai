@@ -47,8 +47,13 @@ def create_app(config_name=None):
     def bad_request_error(e):
         return jsonify({'error': f'Bad Request: {str(e.description if hasattr(e, "description") else e)}'}), 400
 
-    # Automatically create DB tables in development if needed
+    # Automatically create DB tables & seed sample data in development if needed
     with app.app_context():
         db.create_all()
+        try:
+            from app.services.job_service import JobService
+            JobService.seed_jobs_if_empty()
+        except Exception as err:
+            app.logger.warning(f"Initial job seeding warning: {err}")
 
     return app
