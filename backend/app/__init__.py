@@ -17,7 +17,13 @@ def create_app(config_name=None):
         config_name = os.getenv('FLASK_ENV', 'development')
 
     app = Flask(__name__)
-    app.config.from_object(config_by_name.get(config_name, config_by_name['default']))
+    config_cls = config_by_name.get(config_name, config_by_name['default'])
+
+    app.config.from_object(config_cls)
+
+    # Invoke configuration initialization & validation hook
+    if hasattr(config_cls, 'init_app'):
+        config_cls.init_app(app)
 
     # Ensure uploads directory exists
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)

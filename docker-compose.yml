@@ -29,7 +29,8 @@ services:
     restart: always
     environment:
       - FLASK_ENV=${FLASK_ENV:-development}
-      - SECRET_KEY=${SECRET_KEY:-super_secret_jwt_key_dev}
+      - SECRET_KEY=${SECRET_KEY}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - DATABASE_URL=postgresql://${POSTGRES_USER:-resumepilot_user}:${POSTGRES_PASSWORD:-resumepilot_secure_pass}@postgres:5432/${POSTGRES_DB:-resumepilot_db}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
     ports:
