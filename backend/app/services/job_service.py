@@ -11,11 +11,11 @@ from app.ai.job_matching_engine import analyze_job_match_with_gemini
 
 logger = logging.getLogger(__name__)
 
-# Sample job seed data covering all 8 required roles
+# Sample job seed data covering all 8 required roles with official career destinations
 SAMPLE_JOB_POSTINGS = [
     {
         "title": "Software Engineer",
-        "company": "Nexus Technologies",
+        "company": "Amazon",
         "location": "Remote (US/Canada)",
         "experience_level": "Mid Level",
         "employment_type": "Full-time",
@@ -23,11 +23,11 @@ SAMPLE_JOB_POSTINGS = [
         "description": "We are seeking a versatile Software Engineer to design, develop, and maintain high-performance web applications and backend services. You will collaborate with cross-functional teams to deliver scalable microservices and clean API architectures.",
         "required_skills": ["Python", "Flask", "PostgreSQL", "REST APIs", "Git", "Docker"],
         "preferred_skills": ["Redis", "Kubernetes", "AWS", "CI/CD"],
-        "apply_url": None
+        "apply_url": "https://www.amazon.jobs/en/search?base_query=software+development+engineer&country=IND"
     },
     {
         "title": "Frontend Developer",
-        "company": "Vivid Cloud Systems",
+        "company": "Google",
         "location": "San Francisco, CA (Hybrid)",
         "experience_level": "Mid Level",
         "employment_type": "Full-time",
@@ -35,11 +35,11 @@ SAMPLE_JOB_POSTINGS = [
         "description": "Build stunning, responsive, and high-performance user interfaces using React, TypeScript, and modern CSS frameworks. You will partner with product design teams to create glassmorphic dashboards and real-time interactive user experiences.",
         "required_skills": ["React", "JavaScript", "TypeScript", "Tailwind CSS", "HTML5/CSS3", "REST APIs"],
         "preferred_skills": ["Next.js", "Redux", "Zustand", "Webpack/Vite", "Figma"],
-        "apply_url": None
+        "apply_url": "https://www.google.com/about/careers/applications/jobs/results/?location=India"
     },
     {
         "title": "Backend Developer",
-        "company": "Apex Data Infrastructure",
+        "company": "Microsoft",
         "location": "New York, NY (Hybrid)",
         "experience_level": "Mid Level",
         "employment_type": "Full-time",
@@ -47,11 +47,11 @@ SAMPLE_JOB_POSTINGS = [
         "description": "Architect and scale mission-critical backend microservices, relational database schemas, and distributed caching pipelines. You will lead database query optimization and enforce high-throughput API security.",
         "required_skills": ["Python", "Flask", "SQLAlchemy", "PostgreSQL", "REST APIs", "Docker"],
         "preferred_skills": ["Redis", "RabbitMQ", "gRPC", "Kubernetes", "AWS"],
-        "apply_url": None
+        "apply_url": "https://careers.microsoft.com/v2/global/en/locations/india..html"
     },
     {
         "title": "Full Stack Engineer",
-        "company": "Nova SaaS Labs",
+        "company": "Amazon",
         "location": "Austin, TX (Remote)",
         "experience_level": "Mid Level",
         "employment_type": "Full-time",
@@ -59,11 +59,11 @@ SAMPLE_JOB_POSTINGS = [
         "description": "Drive end-to-end feature delivery across our React SPA frontend and Python Flask microservice backend. You will build user-facing AI features, manage database ORM models, and optimize CI/CD deployment pipelines.",
         "required_skills": ["React", "Python", "Flask", "PostgreSQL", "JavaScript", "REST APIs"],
         "preferred_skills": ["Docker", "Tailwind CSS", "TypeScript", "Redis", "Vercel/Render"],
-        "apply_url": None
+        "apply_url": "https://www.amazon.jobs/en/search?base_query=Software+Dev+Engineer+I&country=IND&loc_query=India"
     },
     {
         "title": "Data Scientist",
-        "company": "Insight Intelligence AI",
+        "company": "Deloitte",
         "location": "Boston, MA (Hybrid)",
         "experience_level": "Mid Level",
         "employment_type": "Full-time",
@@ -71,11 +71,11 @@ SAMPLE_JOB_POSTINGS = [
         "description": "Extract actionable business insights and train predictive machine learning models using Python, Pandas, Scikit-Learn, and SQL. You will build end-to-end data pipelines, run statistical hypothesis tests, and communicate findings to leadership.",
         "required_skills": ["Python", "SQL", "Pandas", "NumPy", "Scikit-Learn", "Data Visualization"],
         "preferred_skills": ["PyTorch", "TensorFlow", "PostgreSQL", "A/B Testing", "Spark"],
-        "apply_url": None
+        "apply_url": "https://southasiacareers.deloitte.com/go/Deloitte-India/718244/"
     },
     {
         "title": "Machine Learning Engineer",
-        "company": "Cortex Applied AI",
+        "company": "Google",
         "location": "Seattle, WA (Remote)",
         "experience_level": "Senior Level",
         "employment_type": "Full-time",
@@ -83,7 +83,7 @@ SAMPLE_JOB_POSTINGS = [
         "description": "Train, fine-tune, and deploy state-of-the-art Deep Learning and Generative AI models into production inference pipelines. You will optimize LLM response latency, build vector search indexes, and engineer automated MLOps pipelines.",
         "required_skills": ["Python", "PyTorch", "Transformers", "LLMs", "Vector DBs", "Docker"],
         "preferred_skills": ["TensorRT", "ONNX", "FastAPI", "Kubernetes", "MLflow"],
-        "apply_url": None
+        "apply_url": "https://www.google.com/about/careers/applications/jobs/results/?location=India"
     },
     {
         "title": "DevOps Engineer",
@@ -99,7 +99,7 @@ SAMPLE_JOB_POSTINGS = [
     },
     {
         "title": "Product Manager",
-        "company": "Elevate Product Studio",
+        "company": "Microsoft",
         "location": "Chicago, IL (Hybrid)",
         "experience_level": "Mid Level",
         "employment_type": "Full-time",
@@ -107,7 +107,7 @@ SAMPLE_JOB_POSTINGS = [
         "description": "Lead product roadmap vision, user research, feature prioritization, and sprint execution for our SaaS platform. You will work closely with engineering leads and UX designers to launch high-impact product experiences.",
         "required_skills": ["Product Strategy", "User Research", "Agile/Scrum", "Data Analytics", "Roadmap Planning", "Wireframing"],
         "preferred_skills": ["SQL", "A/B Testing", "Mixpanel", "Jira", "Technical Background"],
-        "apply_url": None
+        "apply_url": "https://careers.microsoft.com/v2/global/en/students?submit=Search"
     }
 ]
 
@@ -117,19 +117,34 @@ class JobService:
 
     @classmethod
     def seed_jobs_if_empty(cls):
-        """Seed sample job postings if database is empty or sanitize placeholder URLs."""
+        """Seed sample job postings if database is empty or synchronize official apply URLs."""
         try:
-            # Sanitize existing db rows containing placeholder URLs (e.g. example.com)
             existing_jobs = JobPosting.query.all()
             if len(existing_jobs) > 0:
                 dirty = False
+                sample_map = {s["title"].lower().strip(): s for s in SAMPLE_JOB_POSTINGS}
+
                 for job in existing_jobs:
+                    title_key = job.title.lower().strip() if job.title else ""
+                    sample = sample_map.get(title_key)
+
+                    # Clean placeholder URLs
                     if job.apply_url and ('example.com' in job.apply_url.lower() or job.apply_url == '#'):
                         job.apply_url = None
                         dirty = True
+
+                    # Synchronize company and official apply_url for sample jobs
+                    if sample:
+                        if job.company != sample["company"]:
+                            job.company = sample["company"]
+                            dirty = True
+                        if job.apply_url != sample["apply_url"]:
+                            job.apply_url = sample["apply_url"]
+                            dirty = True
+
                 if dirty:
                     db.session.commit()
-                    logger.info("Sanitized placeholder URLs in existing job postings.")
+                    logger.info("Synchronized official career apply URLs for existing job postings.")
             else:
                 logger.info("Seeding database with sample job postings...")
                 for job_data in SAMPLE_JOB_POSTINGS:

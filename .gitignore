@@ -38,6 +38,7 @@ yarn-error.log*
 *.db
 uploads/*
 !uploads/.gitkeep
+backend/uploads/*
 
 # IDE & OS Files
 .DS_Store
