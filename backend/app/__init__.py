@@ -1,7 +1,7 @@
 import os
 import logging
 from flask import Flask, jsonify
-from app.config import config_by_name
+from app.config import config_by_name, get_cors_origins
 from app.extensions import db, jwt, bcrypt, cors
 from app.api import register_blueprints
 
@@ -25,6 +25,10 @@ def create_app(config_name=None):
     if hasattr(config_cls, 'init_app'):
         config_cls.init_app(app)
 
+    # Dynamically set CORS origins on app.config
+    cors_origins = get_cors_origins()
+    app.config['CORS_ORIGINS'] = cors_origins
+
     # Ensure uploads directory exists
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
@@ -32,7 +36,13 @@ def create_app(config_name=None):
     db.init_app(app)
     jwt.init_app(app)
     bcrypt.init_app(app)
-    cors.init_app(app, resources={r"/api/*": {"origins": "*"}})
+
+    # Configure CORS with environment-based allowed origins (eliminates unsafe wildcard)
+    cors.init_app(
+        app,
+        resources={r"/api/*": {"origins": cors_origins}},
+        supports_credentials=True
+    )
 
     # Register API Blueprints
     register_blueprints(app)

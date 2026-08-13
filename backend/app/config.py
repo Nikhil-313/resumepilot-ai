@@ -17,6 +17,14 @@ KNOWN_INSECURE_SECRETS = {
     'jwt_secret',
 }
 
+def get_cors_origins():
+    """Parse CORS_ORIGINS from environment as a list of allowed origins."""
+    cors_env = os.getenv('CORS_ORIGINS', '')
+    if cors_env.strip():
+        return [origin.strip() for origin in cors_env.split(',') if origin.strip()]
+    # Default fallback for local development frontend servers
+    return ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:3001']
+
 class Config:
     """Base application configuration."""
     SECRET_KEY = os.getenv('SECRET_KEY', 'default_dev_secret_key_change_me')
