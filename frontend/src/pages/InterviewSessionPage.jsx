@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
 import { interviewService } from '../services/interviewService';
@@ -32,6 +32,22 @@ export default function InterviewSessionPage() {
   const [evalStep, setEvalStep] = useState('Analyzing answer STAR structure...');
   const [error, setError] = useState('');
 
+  // Dynamic Session Timer State (in seconds)
+  const [timeLeft, setTimeLeft] = useState(null);
+  const isFinishingRef = useRef(false); // Duplicate-submission protection ref
+
+  // Duration calculation logic based on questions.length
+  // 5 questions -> 15 min (900s), 10 questions -> 25 min (1500s), 15 questions -> 35 min (2100s)
+  const calculateInitialSeconds = (count) => {
+    if (!count || count <= 0) return 15 * 60;
+    if (count === 5) return 15 * 60;
+    if (count === 10) return 25 * 60;
+    if (count === 15) return 35 * 60;
+    // General fallback formula: 5 + count * 2 minutes
+    const mins = 5 + (count * 2);
+    return mins * 60;
+  };
+
   // Fetch session data on mount
   useEffect(() => {
     const fetchSession = async () => {
@@ -40,11 +56,16 @@ export default function InterviewSessionPage() {
         const data = await interviewService.getSession(sessionId);
         const sess = data.session;
         setSession(sess);
-        setQuestions(sess.questions || []);
+
+        const loadedQuestions = sess.questions || [];
+        setQuestions(loadedQuestions);
+
+        // Initialize timer based on questions.length
+        setTimeLeft(calculateInitialSeconds(loadedQuestions.length));
 
         // Initialize local answers state from DB records
         const initialAnswers = {};
-        (sess.questions || []).forEach((q) => {
+        loadedQuestions.forEach((q) => {
           initialAnswers[q.id] = q.candidate_answer || '';
         });
         setAnswers(initialAnswers);
@@ -81,6 +102,59 @@ export default function InterviewSessionPage() {
     }
   };
 
+  // Auto-finish handler when timer reaches 00:00
+  const handleAutoFinish = async () => {
+    if (isFinishingRef.current) return;
+    isFinishingRef.current = true;
+
+    await saveCurrentAnswer();
+    setEvaluating(true);
+    setError('');
+
+    try {
+      setEvalStep('Session time expired. Auto-evaluating responses...');
+      await new Promise((resolve) => setTimeout(resolve, 600));
+
+      setEvalStep('Scoring communication clarity & completeness...');
+      await new Promise((resolve) => setTimeout(resolve, 600));
+
+      setEvalStep('Generating personalized AI recommendations...');
+      const evalRes = await interviewService.evaluateSession(sessionId);
+
+      if (evalRes && evalRes.report) {
+        navigate(`/interview/report/${sessionId}`);
+      } else {
+        throw new Error('Evaluation report missing.');
+      }
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to evaluate interview responses.');
+      setEvaluating(false);
+      isFinishingRef.current = false;
+    }
+  };
+
+  // Countdown timer effect
+  useEffect(() => {
+    if (loading || evaluating || timeLeft === null || isFinishingRef.current) return;
+
+    if (timeLeft <= 0) {
+      handleAutoFinish();
+      return;
+    }
+
+    const intervalId = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev === null || prev <= 1) {
+          clearInterval(intervalId);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [loading, evaluating, timeLeft]);
+
   const handleNext = async () => {
     await saveCurrentAnswer();
     if (currentIndex < questions.length - 1) {
@@ -96,7 +170,7 @@ export default function InterviewSessionPage() {
   };
 
   const handleAnswerChange = (val) => {
-    if (!currentQuestion) return;
+    if (!currentQuestion || timeLeft === 0 || evaluating) return;
     setAnswers({
       ...answers,
       [currentQuestion.id]: val,
@@ -104,9 +178,12 @@ export default function InterviewSessionPage() {
   };
 
   const handleFinish = async () => {
+    if (isFinishingRef.current) return;
+
     await saveCurrentAnswer();
     if (!window.confirm('Are you sure you want to finish this interview and generate your AI evaluation report?')) return;
 
+    isFinishingRef.current = true;
     setEvaluating(true);
     setError('');
 
@@ -128,7 +205,18 @@ export default function InterviewSessionPage() {
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to evaluate interview responses.');
       setEvaluating(false);
+      isFinishingRef.current = false;
     }
+  };
+
+  const formatTime = (seconds) => {
+    if (seconds === null || seconds === undefined) return '15:00';
+    const totalSecs = Math.max(0, Math.floor(seconds));
+    const mins = Math.floor(totalSecs / 60);
+    const secs = totalSecs % 60;
+    const mm = String(mins).padStart(2, '0');
+    const ss = String(secs).padStart(2, '0');
+    return `${mm}:${ss}`;
   };
 
   if (loading) {
@@ -182,6 +270,7 @@ export default function InterviewSessionPage() {
   }
 
   const progressPercent = questions.length > 0 ? ((currentIndex + 1) / questions.length) * 100 : 0;
+  const isExpired = timeLeft === 0;
 
   return (
     <div className="min-h-screen bg-background-dark text-slate-100 flex flex-col">
@@ -208,12 +297,34 @@ export default function InterviewSessionPage() {
               </div>
             </div>
 
-            {/* Timer Placeholder */}
-            <div className="flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 shrink-0">
-              <Clock className="w-4 h-4 text-brand-cyan animate-pulse" />
-              <span className="text-xs font-mono font-semibold text-slate-200">15:00</span>
-              <span className="text-[10px] text-slate-500 font-mono">TIMER</span>
-            </div>
+            {/* Dynamic Real-Time Countdown Timer Badge */}
+            {(() => {
+              const isWarning = timeLeft !== null && timeLeft > 0 && timeLeft < 180; // < 3 mins
+
+              let badgeStyle = "bg-slate-900 border-slate-800 text-slate-200";
+              let iconStyle = "text-brand-cyan animate-pulse";
+              let labelText = "TIMER";
+
+              if (isExpired) {
+                badgeStyle = "bg-rose-500/20 border-rose-500/40 text-rose-300";
+                iconStyle = "text-rose-400";
+                labelText = "TIME'S UP";
+              } else if (isWarning) {
+                badgeStyle = "bg-amber-500/20 border-amber-500/40 text-amber-300 animate-pulse";
+                iconStyle = "text-amber-400";
+                labelText = "FINAL MINS";
+              }
+
+              return (
+                <div className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-xl border shrink-0 transition-all ${badgeStyle}`}>
+                  <Clock className={`w-4 h-4 ${iconStyle}`} />
+                  <span className="text-xs font-mono font-bold tracking-wider">
+                    {formatTime(timeLeft)}
+                  </span>
+                  <span className="text-[10px] font-mono font-semibold opacity-75">{labelText}</span>
+                </div>
+              );
+            })()}
           </div>
 
           {/* Progress Bar */}
@@ -271,8 +382,9 @@ export default function InterviewSessionPage() {
               rows={7}
               value={answers[currentQuestion?.id] || ''}
               onChange={(e) => handleAnswerChange(e.target.value)}
-              placeholder="Type your structured response here..."
-              className="w-full p-4 bg-slate-950/80 border border-slate-800 rounded-xl text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-brand-indigo focus:ring-1 focus:ring-brand-indigo transition-all font-sans leading-relaxed resize-y"
+              disabled={isExpired || evaluating}
+              placeholder={isExpired ? "Time's up! Session submitted for AI evaluation." : "Type your structured response here..."}
+              className="w-full p-4 bg-slate-950/80 border border-slate-800 rounded-xl text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-brand-indigo focus:ring-1 focus:ring-brand-indigo transition-all font-sans leading-relaxed resize-y disabled:opacity-60 disabled:cursor-not-allowed"
             />
           </div>
 
@@ -281,7 +393,7 @@ export default function InterviewSessionPage() {
             <button
               type="button"
               onClick={handlePrev}
-              disabled={currentIndex === 0}
+              disabled={currentIndex === 0 || isExpired || evaluating}
               className="px-5 py-3 bg-slate-900 hover:bg-slate-800 text-slate-300 font-semibold rounded-xl text-xs border border-slate-800 flex items-center space-x-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -292,7 +404,8 @@ export default function InterviewSessionPage() {
               <button
                 type="button"
                 onClick={handleFinish}
-                className="px-5 py-3 bg-slate-800 hover:bg-slate-700 text-rose-300 hover:text-rose-200 font-semibold rounded-xl text-xs border border-slate-700 flex items-center space-x-2 transition-all"
+                disabled={isExpired || evaluating}
+                className="px-5 py-3 bg-slate-800 hover:bg-slate-700 text-rose-300 hover:text-rose-200 font-semibold rounded-xl text-xs border border-slate-700 flex items-center space-x-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <Flag className="w-4 h-4 text-rose-400" />
                 <span>Finish & Evaluate</span>
@@ -302,7 +415,8 @@ export default function InterviewSessionPage() {
                 <button
                   type="button"
                   onClick={handleNext}
-                  className="px-6 py-3 bg-gradient-to-r from-brand-indigo to-brand-cyan hover:opacity-95 text-white font-bold rounded-xl text-xs shadow-lg glow-cyan-sm flex items-center space-x-2 transition-all"
+                  disabled={isExpired || evaluating}
+                  className="px-6 py-3 bg-gradient-to-r from-brand-indigo to-brand-cyan hover:opacity-95 text-white font-bold rounded-xl text-xs shadow-lg glow-cyan-sm flex items-center space-x-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <span>Next Question</span>
                   <ArrowRight className="w-4 h-4" />
