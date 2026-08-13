@@ -334,7 +334,7 @@ class ProgressService:
 
     @classmethod
     def update_task_status(cls, user_id: str, task_id: str, status: str) -> Tuple[Dict[str, Any], int]:
-        """Update ProgressTask status and synchronize status back to source module where applicable."""
+        """Update ProgressTask status and synchronize status back to source module with strict user ownership validation."""
         if status not in ['pending', 'in_progress', 'completed', 'dismissed']:
             return {'error': 'Invalid status.'}, 400
 
@@ -347,33 +347,33 @@ class ProgressService:
             if status == 'completed':
                 task.completed_at = datetime.utcnow()
 
-            # Sync back to source module model if source reference exists
+            # Sync back to source module model if source reference exists and belongs to authenticated user
             if task.source_type and task.source_id:
                 if task.source_type == 'career_goal':
                     g = CareerGoal.query.get(task.source_id)
-                    if g:
+                    if g and g.career_plan and g.career_plan.user_id == user_id:
                         s_map = {'pending': 'not_started', 'in_progress': 'in_progress', 'completed': 'completed', 'dismissed': 'not_started'}
                         g.status = s_map.get(status, 'not_started')
 
                 elif task.source_type == 'skill_roadmap':
                     s = SkillRoadmap.query.get(task.source_id)
-                    if s:
+                    if s and s.career_plan and s.career_plan.user_id == user_id:
                         s_map = {'pending': 'not_started', 'in_progress': 'in_progress', 'completed': 'completed', 'dismissed': 'not_started'}
                         s.status = s_map.get(status, 'not_started')
 
                 elif task.source_type == 'interview_recommendation':
                     rec = InterviewPracticeRecommendation.query.get(task.source_id)
-                    if rec:
+                    if rec and rec.user_id == user_id:
                         rec.status = status
 
                 elif task.source_type == 'resume_recommendation':
                     r_rec = ResumeRecommendation.query.get(task.source_id)
-                    if r_rec:
+                    if r_rec and r_rec.optimization and r_rec.optimization.user_id == user_id:
                         r_rec.status = 'accepted' if status == 'completed' else ('rejected' if status == 'dismissed' else 'pending')
 
                 elif task.source_type == 'application_followup':
                     fu = ApplicationFollowUp.query.get(task.source_id)
-                    if fu:
+                    if fu and fu.application and fu.application.user_id == user_id:
                         fu.completed = True if status == 'completed' else False
 
             db.session.commit()
